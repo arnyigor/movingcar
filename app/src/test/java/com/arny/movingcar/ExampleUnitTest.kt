@@ -1,6 +1,5 @@
 package com.arny.movingcar
 
-import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
@@ -11,6 +10,15 @@ import org.junit.Test
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+        val angle = getAngle(intArrayOf(5, 5), intArrayOf(2, 2))
+        println("angle:$angle")
+        assert(angle == 90.0)
+    }
+    @Test
+    fun less_time_from_more_angle() {
+        val angle = 10.0
+        val time = getTimeToRotate(angle, 2000)
+        println("tmp:$time")
+        assert(time==-100.0)
     }
 }
