@@ -21,4 +21,24 @@ class ExampleUnitTest {
         println("tmp:$time")
         assert(time==-100.0)
     }
+    @Test
+    fun normal_angle() {
+        val angle = normalizeAngle(-360.0-45.0)
+        println("tmp:$angle")
+        assert(angle==-100.0)
+    }
+    @Test
+    fun mirror_angle() {
+        val angle = getMirrorAngle(45.0)
+        println("mirror_angle:$angle")
+        assert(angle==-100.0)
+    }
+    @Test
+    fun less_angle() {
+        val current = 5.0
+        val angle = -5.0
+        val distance = distance(current, angle)
+        println("tmp:$distance")
+        assert(distance==-100000.0)
+    }
 }

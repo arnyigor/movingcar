@@ -16,6 +16,7 @@ import kotlin.math.roundToInt
 
 
 class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
+    //    private var bitmap: Bitmap?
     private var mTargetSize: Float = 0f
     private var mCarColor = Color.BLACK
     private var moveAnimator: ValueAnimator? = null
@@ -29,6 +30,7 @@ class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(
     private var initialTouchX: Float = 0f
     private var centerPosY: Int = 0
     private var centerPosX: Int = 0
+    private var initAngle: Float = 90f
     private val startAngle: Float = 0f
     private var currentAngle: Float = 0f
     private var bgColor: Int = Color.WHITE
@@ -59,6 +61,9 @@ class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(
         targetPaint.strokeWidth = 0f
         mLinesPaint.strokeWidth = 4f
         path = Path()
+        val options = BitmapFactory.Options()
+        options.inSampleSize = 2
+//        bitmap = BitmapFactory.decodeResource(resources, R.drawable.car, options)
         mMatrix = Matrix()
         isHorizontalScrollBarEnabled = true
         isVerticalScrollBarEnabled = true
@@ -71,6 +76,7 @@ class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(
         centerPosX = getHalf(viewWidth)
         centerPosY = viewHeight - getHalf(viewHeight)
         currentAngle = startAngle
+        initAngle = 90f
         targetPaint.strokeWidth = 0f
         invalidate()
     }
@@ -96,19 +102,61 @@ class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(
         val x2 = initialTouchX.roundToInt() - centerPosX
         val y2 = (initialTouchY.roundToInt() - centerPosY) * -1
         val target = intArrayOf(x2, y2)
+        Log.i(MovingContainerView::class.java.simpleName, " ");
         var angle = getAngle(from, target).toFloat()
-        Log.i(MovingContainerView::class.java.simpleName, "calcAngle: from:${from.contentToString()},target:${target.contentToString()},angle:$angle,currentAngle:$currentAngle");
-        val fromCurrent = currentAngle - angle
-//        Log.i(MovingContainerView::class.java.simpleName, "calcAngle: currentAngle:$currentAngle,newAngle:$angle, fromCurrent:$fromCurrent")
-        if (fromCurrent < 0) {
-            angle *= -1
+        var current = currentAngle
+        if (initAngle == 90.0f) {
+            current = initAngle
+            initAngle = 0f
         }
-        var correction = 90f
-        var resultAngle = angle + correction
+        Log.i(MovingContainerView::class.java.simpleName, "\ncalcAngle: from:${from.contentToString()},target:${target.contentToString()},angle:$angle,currentAngle:$current")
+
+        var ang1 = getPositiveRotation(current, angle)
+        var ang2 = getNegativeRotation(current, angle)
+        var resultAngle: Float = getFinalAng(current, angle)
         Log.i(MovingContainerView::class.java.simpleName, "calcAngle:currentAngle:$currentAngle->resultAngle :$resultAngle")
-        val resultDiff = currentAngle - resultAngle
-        Log.i(MovingContainerView::class.java.simpleName, "calcAngle:resultDiff:$resultDiff")
         return resultAngle
+    }
+
+    private fun getFinalAng(current: Float, angle: Float): Float {
+        var current1 = current
+        val normalAngle = normalAngle(current1.toDouble())
+        if (current1 < 0 && normalAngle < -270.0 && normalAngle > -360.0) {
+            current1 = getMirrorAngle(current1.toDouble()).toFloat()
+        }
+        var newAngle = angle
+        if (angle - current1 > 180) {
+            newAngle -= 360
+        }
+        var resultAngle: Float
+        if (newAngle < -180) {
+            resultAngle = 90f - newAngle
+            if (current1 < 0) {
+                resultAngle = getMirrorAngle(resultAngle.toDouble()).toFloat()
+            }
+        } else {
+            resultAngle = 90f - newAngle
+            if (current1 < 0) {
+                resultAngle = getMirrorAngle(resultAngle.toDouble()).toFloat()
+            }
+        }
+        return resultAngle
+    }
+
+    private fun getNegativeRotation(current: Float, angle: Float): Double {
+        return if ((360.0 - current - angle - 90.0) % 360 > 90 && (360.0 - current - angle - 90) % 360 < 270.0) {
+            (90.0 - current - angle) % 360
+        } else {
+            (270.0 - current - angle) % 360
+        }
+    }
+
+    private fun getPositiveRotation(current: Float, angle: Float): Double {
+        return if ((360.0 - current - angle) % 360 > 90.0 && (360.0 - current - angle) % 360 < 270.0) {
+            (180.0 - current - angle) % 360
+        } else {
+            (360.0 - current - angle) % 360
+        }
     }
 
     override fun onSizeChanged(xNew: Int, yNew: Int, xOld: Int, yOld: Int) {
@@ -189,6 +237,7 @@ class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(
     }
 
     private fun rotateAnimate(newAngle: Float) {
+        Log.i(MovingContainerView::class.java.simpleName, "rotateAnimate: currentAngle:$currentAngle");
         val rotateProp = PropertyValuesHolder.ofFloat("rotate", currentAngle, newAngle)
         rotateAnimator?.setValues(rotateProp);
         rotateAnimator?.start()
@@ -245,14 +294,6 @@ class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         drawCenterGrid(canvas)
-//        drawGrid(canvas)
-        /*  path.reset()
-          carF.set(getCarBoundLeft().toFloat(), getCarBoundTop().toFloat(), getCarBoundRight().toFloat(), getCarBoundBottom().toFloat())
-          path.addRect(carF, Path.Direction.CW);
-          matrix.reset();
-          matrix.setRotate(currentAngle,carF.centerX(), carF.centerY());
-          path.transform(matrix);
-          canvas.drawPath(path, mCarFPaint);*/
         canvas.drawPoint(initialTouchX, initialTouchY, targetPaint)
         car.set(getCarBoundLeft(), getCarBoundTop(), getCarBoundRight(), getCarBoundBottom())
         canvas.rotate(currentAngle, car.exactCenterX(), car.exactCenterY())
