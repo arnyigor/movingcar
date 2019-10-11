@@ -5,5 +5,9 @@
         <attr name="target_color" format="color"/>
         <attr name="target_size" format="float"/>
         <attr name="car_color" format="color"/>
+        <attr name="map_width" format="integer"/>
+        <attr name="map_height" format="integer"/>
+        <attr name="has_center_lines" format="boolean"/>
+        <attr name="has_grid" format="boolean"/>
     </declare-styleable>
 </resources>

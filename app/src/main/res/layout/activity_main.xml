@@ -7,12 +7,27 @@
     tools:context=".MainActivity">
 
 
-    <com.arny.movingcar.MovingContainerView
-        android:layout_width="match_parent"
-        android:id="@+id/moving_view"
-        app:car_color="@color/colorPrimary"
-        app:target_color="@color/colorAccent"
-        app:target_size="20.0"
-        android:layout_height="match_parent" />
+   <HorizontalScrollView
+       android:layout_width="match_parent"
+       android:scrollbars="vertical"
+       android:id="@+id/scroll_hor"
+       android:layout_height="match_parent">
+       <ScrollView
+           android:layout_width="wrap_content"
+           android:id="@+id/scroll_vert"
+           android:layout_height="match_parent">
+           <com.arny.movingcar.MovingContainerView
+               android:layout_width="match_parent"
+               app:map_height="1000"
+               app:has_center_lines="false"
+               app:has_grid="true"
+               app:map_width="1000"
+               android:id="@+id/moving_view"
+               app:car_color="@color/colorPrimary"
+               app:target_color="@color/colorAccent"
+               app:target_size="20.0"
+               android:layout_height="wrap_content" />
 
+       </ScrollView>
+   </HorizontalScrollView>
 </LinearLayout>

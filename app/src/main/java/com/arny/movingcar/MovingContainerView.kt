@@ -5,9 +5,9 @@ import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.Resources
 import android.graphics.*
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -17,6 +17,10 @@ import kotlin.math.roundToInt
 
 
 class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
+    private var mHasGrid: Boolean
+    private var mHasCenterLines: Boolean
+    private var mMapWidth: Int
+    private var mMapHeight: Int
     //    private var bitmap: Bitmap?
     private var mTargetSize: Float = 0f
     private var mCarColor = Color.BLACK
@@ -37,7 +41,7 @@ class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(
     private var bgColor: Int = Color.WHITE
     private val car: Rect
     private val carF: RectF
-    private var carWidth = 12
+    private var carWidth = 25
     private var carHeight = 100
     private var mMatrix: Matrix
     private val mCarPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -46,6 +50,8 @@ class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(
     private val mBorderPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val targetPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var mTargetColor = Color.GREEN
+    private val defaultMapSize = 1000
+    private var borderThick = 6f
 
     init {
         val typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.MovingContainerView)
@@ -53,6 +59,12 @@ class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(
         mCarColor = typedArray.getColor(R.styleable.MovingContainerView_car_color, Color.BLACK)
         mTargetColor = typedArray.getColor(R.styleable.MovingContainerView_target_color, Color.GREEN)
         mTargetSize = typedArray.getFloat(R.styleable.MovingContainerView_target_size, 10f)
+        mMapWidth = typedArray.getInteger(R.styleable.MovingContainerView_map_width, defaultMapSize)
+        mMapHeight =
+            typedArray.getInteger(R.styleable.MovingContainerView_map_height, defaultMapSize)
+        mHasCenterLines =
+            typedArray.getBoolean(R.styleable.MovingContainerView_has_center_lines, true)
+        mHasGrid = typedArray.getBoolean(R.styleable.MovingContainerView_has_grid, true)
         typedArray.recycle()
         car = Rect()
         carF = RectF()
@@ -60,7 +72,7 @@ class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(
         mCarPaint.color = mCarColor;
         mLinesPaint.color = Color.LTGRAY;
         mBorderPaint.color = Color.RED;
-        mBorderPaint.strokeWidth = 6f
+        mBorderPaint.strokeWidth = borderThick
         targetPaint.color = mTargetColor;
         mLinesPaint.strokeWidth = 4f
         path = Path()
@@ -90,11 +102,10 @@ class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(
         val rotateTime = 300L//((1 / diff) * 1000).toLong()
         rotateAnimator?.duration = rotateTime
         rotateAnimate(angle.first, angle.second)
+
     }
 
     private fun moveToNewPosition(initialTouchX: Float, initialTouchY: Float) {
-        Log.i(MovingContainerView::class.java.simpleName, "moveToNewPosition: centerPosX:$centerPosX,initialTouchX:$initialTouchX")
-        Log.i(MovingContainerView::class.java.simpleName, "moveToNewPosition: centerPosY:$centerPosY,initialTouchY:$initialTouchY")
         positionAnimate(initialTouchY.toInt(), initialTouchX.toInt())
     }
 
@@ -131,10 +142,6 @@ class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(
         if (diff >= 360) {
             diff -= 360
         }
-        mirrorAngleCorrect
-        correctAngle
-        newCurrent
-        resultAngle
         var resultAngleMirror = false
         if ((newCurrent > 0 || IIx )&& right180) {
             resultAngleMirror = true
@@ -196,8 +203,7 @@ class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(
 
             override fun onAnimationEnd(animation: Animator?) {
                 rotateInPropress = false
-                Log.i(MovingContainerView::class.java.simpleName, "onAnimationEnd: currentAngle:$currentAngle");
-//                moveToNewPosition(initialTouchX, initialTouchY)
+                moveToNewPosition(initialTouchX, initialTouchY)
             }
 
             override fun onAnimationCancel(animation: Animator?) {
@@ -241,7 +247,6 @@ class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(
     }
 
     private fun rotateAnimate(fromAngle: Float, newAngle: Float) {
-        Log.i(MovingContainerView::class.java.simpleName, "rotateAnimate: currentAngle:$fromAngle");
         val rotateProp = PropertyValuesHolder.ofFloat("rotate", fromAngle, newAngle)
         rotateAnimator?.setValues(rotateProp);
         rotateAnimator?.start()
@@ -282,10 +287,33 @@ class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(
         }
     }
 
+    private fun getScreenWidth(): Int {
+        return Resources.getSystem().displayMetrics.widthPixels
+    }
+
+    private fun getScreenHeight(): Int {
+        return Resources.getSystem().displayMetrics.heightPixels
+    }
+
+    fun getCenterX(): Int {
+        val screenWidth = getScreenWidth()
+        val centerX = (width.toDouble() / 2) - (screenWidth.toDouble() / 2)
+        return centerX.roundToInt()
+    }
+
+
+    fun getCenterY(): Int {
+        val screenHeight = getScreenHeight()
+        val centerY = (height.toDouble() / 2) - (screenHeight.toDouble() / 2)
+        return centerY.roundToInt()
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        val desiredWidth = suggestedMinimumWidth + paddingLeft + paddingRight
-        val desiredHeight = suggestedMinimumHeight + paddingTop + paddingBottom
+        val desiredWidth =
+            context.getSizeDP(mMapWidth)//suggestedMinimumWidth + paddingLeft + paddingRight
+        val desiredHeight =
+            context.getSizeDP(mMapHeight)//suggestedMinimumHeight + paddingTop + paddingBottom
         val measuredWidth = measureDimension(desiredWidth, widthMeasureSpec)
         val measuredHeight = measureDimension(desiredHeight, heightMeasureSpec)
         setMeasuredDimension(measuredWidth, measuredHeight)
@@ -297,9 +325,13 @@ class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        drawCenterGrid(canvas)
+        if (mHasCenterLines) {
+            drawCenterGrid(canvas)
+        }
         drawBorder(canvas)
-//        drawGrid(canvas)
+        if (mHasGrid) {
+            drawGrid(canvas)
+        }
         canvas.drawPoint(initialTouchX, initialTouchY, targetPaint)
         car.set(getCarBoundLeft(), getCarBoundTop(), getCarBoundRight(), getCarBoundBottom())
         canvas.rotate(currentAngle, car.exactCenterX(), car.exactCenterY())
@@ -316,10 +348,28 @@ class MovingContainerView(context: Context, attrs: AttributeSet? = null) : View(
     }
 
     private fun drawBorder(canvas: Canvas) {
-        canvas.drawLine(0f, 0f, width.toFloat(), 0f, mBorderPaint)
-        canvas.drawLine(width.toFloat(), 0f, width.toFloat(), height.toFloat(), mBorderPaint)
-        canvas.drawLine(width.toFloat(), height.toFloat(), 0f, height.toFloat(), mBorderPaint)
-        canvas.drawLine(0f, height.toFloat(), 0f, 0f, mBorderPaint)
+        canvas.drawLine(
+            borderThick,
+            borderThick,
+            width.toFloat() - borderThick,
+            borderThick,
+            mBorderPaint
+        )
+        canvas.drawLine(
+            width.toFloat() - borderThick,
+            borderThick,
+            width.toFloat() - borderThick,
+            height.toFloat() - borderThick,
+            mBorderPaint
+        )
+        canvas.drawLine(
+            width.toFloat() - borderThick,
+            height.toFloat() - borderThick,
+            borderThick,
+            height.toFloat() - borderThick,
+            mBorderPaint
+        )
+        canvas.drawLine(borderThick, height.toFloat(), borderThick, borderThick, mBorderPaint)
     }
 
     private fun drawCenterGrid(canvas: Canvas) {

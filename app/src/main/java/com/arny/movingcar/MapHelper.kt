@@ -1,9 +1,14 @@
 package com.arny.movingcar
 
+import android.content.Context
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.ceil
+import kotlin.math.roundToInt
 
+ fun Context.getSizeDP(size: Int): Int {
+    return (size * this.resources.displayMetrics.density).roundToInt()
+}
 
 fun getAngle(from: IntArray, target: IntArray): Double {
     val y2 = target[1]
