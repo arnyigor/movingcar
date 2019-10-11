@@ -29,7 +29,7 @@ class ExampleUnitTest {
     }
     @Test
     fun mirror_angle() {
-        val angle = getMirrorAngle(45.0)
+        val angle = getMirrorAngle(135.0)
         println("mirror_angle:$angle")
         assert(angle==-100.0)
     }

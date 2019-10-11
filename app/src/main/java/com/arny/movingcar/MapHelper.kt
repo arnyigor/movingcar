@@ -53,11 +53,13 @@ fun plus360(a: Double): Double {
     return a
 }
 
+
+
 fun getMirrorAngle(angle: Double): Double {
     var a = angle
     a = normalAngle(a)
     if (a < 0) {
-        return -1 * (a + 180)
+        return 360 + a
     }
     return -1 * (360 - a)
 }
