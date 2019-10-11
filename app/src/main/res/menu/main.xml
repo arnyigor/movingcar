@@ -3,8 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_clear"
-        android:title="Clear"
-        android:icon="@android:drawable/ic_menu_close_clear_cancel"
+        android:id="@+id/action_reset"
+        android:title="@string/reset"
         app:showAsAction="ifRoom"/>
 </menu>

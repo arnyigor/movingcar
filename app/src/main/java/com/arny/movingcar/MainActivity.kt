@@ -12,9 +12,13 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        scrollToCenterView()
+    }
+
+    private fun scrollToCenterView() {
         scroll_vert.post {
-            val centerX  = moving_view.getCenterX()
-            val centerY  = moving_view.getCenterY()
+            val centerX = moving_view.getCenterX()
+            val centerY = moving_view.getCenterY()
             scroll_vert.scrollTo(centerX, centerY)
             scroll_hor.scrollTo(centerX, centerY)
         }
@@ -27,8 +31,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item?.itemId) {
-            R.id.action_clear -> {
-                moving_view.clear()
+            R.id.action_reset -> {
+                moving_view.clear{
+                    scrollToCenterView()
+                }
             }
         }
         return super.onOptionsItemSelected(item)

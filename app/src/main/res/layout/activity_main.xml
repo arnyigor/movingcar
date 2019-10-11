@@ -27,7 +27,6 @@
                app:target_color="@color/colorAccent"
                app:target_size="20.0"
                android:layout_height="wrap_content" />
-
        </ScrollView>
    </HorizontalScrollView>
 </LinearLayout>
